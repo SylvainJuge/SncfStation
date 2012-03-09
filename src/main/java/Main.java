@@ -86,8 +86,8 @@ public class Main {
                 if(event.isCharacters() && null != cellType){
                     Characters text = event.asCharacters();
                     String data = text.getData().trim();
-                    if(!"h".equals(data)){
-                        System.out.println(cellType + " " + text.getData());
+                    if(!data.startsWith("h")){
+                        System.out.println(String.format("%s \"%s\"",cellType,data));
                     }
                 }
                 if(event.isEndElement()){
