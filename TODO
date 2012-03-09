@@ -1,0 +1,9 @@
+
+--- Main features ---
+  - parse whole table and display it as ascii
+
+--- Enhancements ---
+  - bundle everything as a single executable .jar
+  - allow for another station
+  - allow for departure and arrivals
+  - do a statistical analysis of which train arrives at which platform
