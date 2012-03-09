@@ -1,2 +1,2 @@
 #!/bin/sh
-java -jar ./target/sncf-displays-0.1-SNAPSHOT-shaded.jar
+java -jar ./target/sncf-displays-0.1-SNAPSHOT-shaded.jar "$@"

@@ -4,7 +4,8 @@
 
 --- Enhancements ---
   x bundle everything as a single executable .jar
-  - allow for offline mode execution (test when not online...)
+  x allow for offline mode execution (test when not online...)
+  - allow for offline mode retrieve (save file after download, for later offline use)
   - allow for another station
   - allow for departure and arrivals
   - do a statistical analysis of which train arrives at which platform

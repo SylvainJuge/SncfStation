@@ -2,6 +2,9 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.BufferedReader;
+import java.io.FileReader;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -35,11 +38,42 @@ public class Main {
     private static final String URL = "http://www.gares-en-mouvement.com/fr/frpno/horaires-temps-reel/dep/";
 
     public static void main(String[] args){
-        HttpClient client = new DefaultHttpClient();
+
+        String xml = null;
+        if( 0 < args.length && "offline".equals(args[0])){
+            System.out.println("Using Offline mode");
+            xml = offlineFile();
+            if( null == xml ){
+                throw new RuntimeException("offline mode not available");
+            }
+        } else {
+            HttpClient client = new DefaultHttpClient();
+            try {
+                xml = doRequest(client, URL);
+            } finally {
+                client.getConnectionManager().shutdown();
+            }
+        }
+        printXml(xml);
+    }
+
+    private static String offlineFile(){
+        File offlineFile = new File("offline.html");
+        if(!offlineFile.exists()){
+            return null;
+        }
         try {
-            printXml(doRequest(client, URL));
-        } finally {
-            client.getConnectionManager().shutdown();
+            BufferedReader reader = new BufferedReader(new FileReader(offlineFile));
+            String line  = null;
+            StringBuilder stringBuilder = new StringBuilder();
+            String ls = System.getProperty("line.separator");
+            while( ( line = reader.readLine() ) != null ) {
+                stringBuilder.append( line );
+                stringBuilder.append( ls );
+            }
+            return stringBuilder.toString();
+        } catch(IOException e){
+            throw new RuntimeException(e);
         }
     }
 
