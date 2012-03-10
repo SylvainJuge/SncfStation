@@ -93,6 +93,7 @@ public class Main {
         }
     }
 
+    // TODO : rename this method
     private static void printXml(String xml){
         String unescapedHtml = StringEscapeUtils.unescapeHtml(xml);
         // we have to remove '&' chars from stream for easy parsing (not relevant in terms of "data")
@@ -102,6 +103,11 @@ public class Main {
         boolean inTable = false;
         boolean inRow = false;
         String cellType = null;
+
+        String fromOrTo = null;
+        String number = null;
+        String time = null;
+        String platform = null;
 
         try {
             XMLEventReader reader = XML_INPUT_FACTORY.createXMLEventReader(input);
@@ -121,6 +127,16 @@ public class Main {
                     Characters text = event.asCharacters();
                     String data = text.getData().trim();
                     if(!data.startsWith("h")){
+                        if(data.endsWith("heure")){
+                            if( null == time ){
+                                time = data;
+                            } else {
+                                time = time + ":" + data;
+                            }
+                        } else if(data.endsWith("numero")){
+                            number = data;
+                        } else
+
                         System.out.println(String.format("%s \"%s\"",cellType,data));
                     }
                 }
