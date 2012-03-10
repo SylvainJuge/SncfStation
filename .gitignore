@@ -1,1 +1,3 @@
 /target
+# vim swap files
+*.swp
