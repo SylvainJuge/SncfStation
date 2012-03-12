@@ -6,6 +6,9 @@ import java.io.File;
 import java.io.BufferedReader;
 import java.io.FileReader;
 
+import java.util.List;
+import java.util.ArrayList;
+
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.HttpEntity;
@@ -93,6 +96,48 @@ public class Main {
         }
     }
 
+    private static class TrainRecord {
+        private String city = null;
+        private String number = null;
+        private String platform = null;
+        private String time = null;
+        // TODO : add a "direction" boolean field to indicate if it's an arrival or a departure
+        // TODO : create a builder class to enforece invariants ?
+        private TrainRecord(String city, String number, String time, String platform){
+            this.city = city;
+            this.number = number;
+            this.time = time;
+            this.platform = platform;
+        }
+        /** @return train where the trains comes from or goes to, depending on direction */
+        public String getCity(){ 
+            return city;
+        }
+        /** @return train number, never null */
+        public String getnumber(){ 
+            return number;
+        }
+        /** @return train platform if known, null otherwise */
+        public String getPlatform(){ 
+            return platform; 
+        }
+        public String getTime(){
+            return time;
+        }
+        @Override
+        public String toString(){
+            return "city="+city+" number="+number+" time="+time+" platform="+platform;
+        }
+    }
+
+    // ensure non-nullity class invariants
+    private static <T> T notNull(T o){
+        if( null == o ){
+            throw new RuntimeException("expected not null value");
+        }
+        return o;
+    }
+
     // TODO : rename this method
     private static void printXml(String xml){
         String unescapedHtml = StringEscapeUtils.unescapeHtml(xml);
@@ -104,10 +149,11 @@ public class Main {
         boolean inRow = false;
         String cellType = null;
 
-        String fromOrTo = null;
+        String city = null;
         String number = null;
         String time = null;
         String platform = null;
+        List<TrainRecord> result = new ArrayList<TrainRecord>();
 
         try {
             XMLEventReader reader = XML_INPUT_FACTORY.createXMLEventReader(input);
@@ -119,6 +165,10 @@ public class Main {
                         inTable = true;
                     } else if(inTable && tagMatch(start,"tr")){
                         inRow = true;
+                        city = null;
+                        number = null;
+                        time = null;
+                        platform = null;
                     } else if( inRow && tagMatch(start,"td")){
                         cellType = getTagClass(start);
                     }
@@ -127,17 +177,23 @@ public class Main {
                     Characters text = event.asCharacters();
                     String data = text.getData().trim();
                     if(!data.startsWith("h")){
-                        if(data.endsWith("heure")){
+                        // TODO : rewrite this with a jdk7 switch with strings literals
+                        if(cellType.endsWith("heure")){
+                            // TODO : make sure that time is propertly formatted and padded with zeros if necessary
                             if( null == time ){
                                 time = data;
                             } else {
                                 time = time + ":" + data;
                             }
-                        } else if(data.endsWith("numero")){
+                        } else if(cellType.endsWith("originedestination")){
+                            city = data;
+                        } else if(cellType.endsWith("numero")){
                             number = data;
-                        } else
+                        } else if(cellType.endsWith("voie")){
+                            platform = data;
+                        }
 
-                        System.out.println(String.format("%s \"%s\"",cellType,data));
+                        //System.out.println(String.format("%s \"%s\"",cellType,data));
                     }
                 }
                 if(event.isEndElement()){
@@ -146,6 +202,8 @@ public class Main {
                         inTable = false;
                     } else if( inTable && tagMatch(end,"tr")){
                         inRow = false;
+                        // TODO : terminate or cancel current TrainRecord
+                        result.add(new TrainRecord(city,number,time,platform));
                     } else if( inRow && tagMatch(end,"td")){
                         cellType = null;
                     }
@@ -153,6 +211,10 @@ public class Main {
             }
         } catch( XMLStreamException e){
             throw new RuntimeException(e);
+        }
+
+        for(TrainRecord record:result){
+            System.out.println(record);
         }
     }
 

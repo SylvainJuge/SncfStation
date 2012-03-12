@@ -2,6 +2,21 @@
 --- Main features ---
   - parse whole table and display it as ascii
 
+--- Code & Design ---
+- use jdk try with resources
+x allow execution without packaging for faster development
+
+- create unit tests for each feature
+    - add testng framework for test execution
+    - test xml parsing with a static file with known data
+    - test TrainRecord creation and invariants
+    - test code on actual server
+
+- split code on main program aspects
+    - retrieve source file : from web, or from static file if offline
+    - parse file and build a representation of its content (List<TrainRecord>)
+    - TrainRecord invariants and builder pattern
+
 --- Enhancements ---
   x bundle everything as a single executable .jar
   x allow for offline mode execution (test when not online...)
