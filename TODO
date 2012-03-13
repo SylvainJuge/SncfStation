@@ -3,7 +3,7 @@
   - parse whole table and display it as ascii
 
 --- Code & Design ---
-- use jdk try with resources
+- use jdk7 try with resources
 x allow execution without packaging for faster development
 
 - create unit tests for each feature
