@@ -68,6 +68,11 @@
                 <version>2.3.2</version>
                 <configuration>
                     <encoding>${encoding}</encoding>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                    <compilerArguments>
+                        <Xlint:all/>
+                    </compilerArguments>
                 </configuration>
             </plugin>
             <plugin>
