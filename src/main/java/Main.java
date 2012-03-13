@@ -38,7 +38,106 @@ public class Main {
         XML_INPUT_FACTORY.setProperty(XMLInputFactory.IS_REPLACING_ENTITY_REFERENCES,true);
     }
 
-    private static final String URL = "http://www.gares-en-mouvement.com/fr/frpno/horaires-temps-reel/dep/";
+    private static class TrainStationDataFetcher {
+        private static final String URL = "http://www.gares-en-mouvement.com/fr/frpno/horaires-temps-reel/dep/";
+        private String downloadDepartureBoard() {
+            // TODO : cache http client once and reuse it when possible
+            HttpClient client = new DefaultHttpClient();
+            HttpGet httpGet = new HttpGet(URL);
+            try {
+                HttpResponse response = client.execute(httpGet);
+                HttpEntity entity = response.getEntity();
+                if( null == entity ){
+                    throw new RuntimeException("no entity in response");
+                }
+                Header encodingHeader = entity.getContentEncoding();
+                String encoding = null != encodingHeader ? encodingHeader.getValue().toUpperCase() : "UTF-8";
+                return EntityUtils.toString(entity,encoding);
+            } catch (IOException e){
+                throw new RuntimeException(e);
+            } finally {
+                client.getConnectionManager().shutdown();
+            }
+        }
+    }
+
+    private static class TrainRecordParser {
+        public List<TrainRecord> parse(String xhtml){
+            String unescapedHtml = StringEscapeUtils.unescapeHtml(xhtml);
+            // we have to remove '&' chars from stream for easy parsing (not relevant in terms of "data")
+            unescapedHtml = unescapedHtml.replaceAll("&",""); 
+            InputStream input = new ByteArrayInputStream(unescapedHtml.getBytes());
+
+            boolean inTable = false;
+            boolean inRow = false;
+            String cellType = null;
+
+            String city = null;
+            String number = null;
+            String time = null;
+            String platform = null;
+            List<TrainRecord> result = new ArrayList<TrainRecord>();
+
+            try {
+                XMLEventReader reader = XML_INPUT_FACTORY.createXMLEventReader(input);
+                while(reader.hasNext()){
+                    XMLEvent event = reader.nextEvent();
+                    if(event.isStartElement()){
+                        StartElement start = event.asStartElement();
+                        if(tagMatch(start,"table","tab_horaires_tps_reel")){
+                            inTable = true;
+                        } else if(inTable && tagMatch(start,"tr")){
+                            inRow = true;
+                            city = null;
+                            number = null;
+                            time = null;
+                            platform = null;
+                        } else if( inRow && tagMatch(start,"td")){
+                            cellType = getTagClass(start);
+                        }
+                    }
+                    if(event.isCharacters() && null != cellType){
+                        Characters text = event.asCharacters();
+                        String data = text.getData().trim();
+                        if(!data.startsWith("h")){
+                            // TODO : rewrite this with a jdk7 switch with strings literals
+                            if(cellType.endsWith("heure")){
+                                // TODO : make sure that time is propertly formatted and padded with zeros if necessary
+                                if( null == time ){
+                                    time = data;
+                                } else {
+                                    time = time + ":" + data;
+                                }
+                            } else if(cellType.endsWith("originedestination")){
+                                city = data;
+                            } else if(cellType.endsWith("numero")){
+                                number = data;
+                            } else if(cellType.endsWith("voie")){
+                                platform = data;
+                            }
+                        }
+                    }
+                    if(event.isEndElement()){
+                        EndElement end = event.asEndElement();
+                        if(tagMatch(end,"table")){
+                            inTable = false;
+                        } else if( inTable && tagMatch(end,"tr")){
+                            inRow = false;
+                            // TODO : terminate or cancel current TrainRecord
+                            if( null != city && null != number && null != time ){
+                                result.add(new TrainRecord(city,number,time,platform));
+                            }
+                        } else if( inRow && tagMatch(end,"td")){
+                            cellType = null;
+                        }
+                    }
+                }
+            } catch( XMLStreamException e){
+                throw new RuntimeException(e);
+            }
+            return result;
+        }
+    }
 
     public static void main(String[] args){
 
@@ -50,14 +149,14 @@ public class Main {
                 throw new RuntimeException("offline mode not available");
             }
         } else {
-            HttpClient client = new DefaultHttpClient();
-            try {
-                xml = doRequest(client, URL);
-            } finally {
-                client.getConnectionManager().shutdown();
-            }
+            TrainStationDataFetcher fetcher = new TrainStationDataFetcher();
+            xml = fetcher.downloadDepartureBoard();
         }
-        printXml(xml);
+        TrainRecordParser parser = new TrainRecordParser();
+        List<TrainRecord> result = parser.parse(xml);
+        for(TrainRecord record:result){
+            System.out.println(record);
+        }
     }
 
     private static String offlineFile(){
@@ -80,21 +179,6 @@ public class Main {
         }
     }
 
-    private static String doRequest(HttpClient client, String url) {
-        HttpGet httpGet = new HttpGet(URL);
-        try {
-            HttpResponse response = client.execute(httpGet);
-            HttpEntity entity = response.getEntity();
-            if( null == entity ){
-                throw new RuntimeException("no entity in response");
-            }
-            Header encodingHeader = entity.getContentEncoding();
-            String encoding = null != encodingHeader ? encodingHeader.getValue().toUpperCase() : "UTF-8";
-            return EntityUtils.toString(entity,encoding);
-        } catch (IOException e){
-            throw new RuntimeException(e);
-        }
-    }
 
     private static class TrainRecord {
         private String city = null;
@@ -104,9 +188,9 @@ public class Main {
         // TODO : add a "direction" boolean field to indicate if it's an arrival or a departure
         // TODO : create a builder class to enforece invariants ?
         private TrainRecord(String city, String number, String time, String platform){
-            this.city = city;
-            this.number = number;
-            this.time = time;
+            this.city = notNull(city);
+            this.number = notNull(number);
+            this.time = notNull(time);
             this.platform = platform;
         }
         /** @return train where the trains comes from or goes to, depending on direction */
@@ -137,87 +221,6 @@ public class Main {
         }
         return o;
     }
-
-    // TODO : rename this method
-    private static void printXml(String xml){
-        String unescapedHtml = StringEscapeUtils.unescapeHtml(xml);
-        // we have to remove '&' chars from stream for easy parsing (not relevant in terms of "data")
-        unescapedHtml = unescapedHtml.replaceAll("&",""); 
-        InputStream input = new ByteArrayInputStream(unescapedHtml.getBytes());
-
-        boolean inTable = false;
-        boolean inRow = false;
-        String cellType = null;
-
-        String city = null;
-        String number = null;
-        String time = null;
-        String platform = null;
-        List<TrainRecord> result = new ArrayList<TrainRecord>();
-
-        try {
-            XMLEventReader reader = XML_INPUT_FACTORY.createXMLEventReader(input);
-            while(reader.hasNext()){
-                XMLEvent event = reader.nextEvent();
-                if(event.isStartElement()){
-                    StartElement start = event.asStartElement();
-                    if(tagMatch(start,"table","tab_horaires_tps_reel")){
-                        inTable = true;
-                    } else if(inTable && tagMatch(start,"tr")){
-                        inRow = true;
-                        city = null;
-                        number = null;
-                        time = null;
-                        platform = null;
-                    } else if( inRow && tagMatch(start,"td")){
-                        cellType = getTagClass(start);
-                    }
-                }
-                if(event.isCharacters() && null != cellType){
-                    Characters text = event.asCharacters();
-                    String data = text.getData().trim();
-                    if(!data.startsWith("h")){
-                        // TODO : rewrite this with a jdk7 switch with strings literals
-                        if(cellType.endsWith("heure")){
-                            // TODO : make sure that time is propertly formatted and padded with zeros if necessary
-                            if( null == time ){
-                                time = data;
-                            } else {
-                                time = time + ":" + data;
-                            }
-                        } else if(cellType.endsWith("originedestination")){
-                            city = data;
-                        } else if(cellType.endsWith("numero")){
-                            number = data;
-                        } else if(cellType.endsWith("voie")){
-                            platform = data;
-                        }
-
-                        //System.out.println(String.format("%s \"%s\"",cellType,data));
-                    }
-                }
-                if(event.isEndElement()){
-                    EndElement end = event.asEndElement();
-                    if(tagMatch(end,"table")){
-                        inTable = false;
-                    } else if( inTable && tagMatch(end,"tr")){
-                        inRow = false;
-                        // TODO : terminate or cancel current TrainRecord
-                        result.add(new TrainRecord(city,number,time,platform));
-                    } else if( inRow && tagMatch(end,"td")){
-                        cellType = null;
-                    }
-                }
-            }
-        } catch( XMLStreamException e){
-            throw new RuntimeException(e);
-        }
-
-        for(TrainRecord record:result){
-            System.out.println(record);
-        }
-    }
-
     private static boolean tagMatch(EndElement end, String tag){
         return tag.equals(end.getName().getLocalPart());
     }
