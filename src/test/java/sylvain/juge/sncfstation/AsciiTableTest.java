@@ -1,11 +1,15 @@
 package sylvain.juge.sncfstation;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.testng.annotations.Test;
 
 import sylvain.juge.sncfstation.AsciiTable;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
 public class AsciiTableTest {
 
@@ -32,13 +36,12 @@ public class AsciiTableTest {
     @Test
     public void singleEntryTable(){
         AsciiTable table = AsciiTable.newDefault();
-        String value = "test";
-        table.addRow(Arrays.asList(value));
+        table.addRow(Arrays.asList("test"));
 
-        checkTableDimensions(table);
-        assertThat( table.getWidth(), is(value.length()+2));
+        checkTableLayout(table);
+        assertThat( table.getWidth(), is(6));
         assertThat( table.getHeight(), is(3));
-        assertThat( table.getRows(), is(Arrays.asList("o----o","|test|","o----o"));
+        assertThat( table.getRows(), is(Arrays.asList("o----o","|test|","o----o")) );
     }
 
     /** ensures that table is consistent between its rows and its getters, and is rectangular 
@@ -51,7 +54,7 @@ public class AsciiTableTest {
         // TODO : to enhance when table will allow to introspect it's separators
         // TODO : then detect where columns separators are and make sure that they are properly aligned as on 1st line
         assertThat(height, is(rows.size()));
-        for(String row:rows){
+        for( String row:rows ){
             assertThat(row.length(), is(width));
         }
     }
@@ -61,6 +64,7 @@ public class AsciiTableTest {
     // - add one row with known values
     // - add one value to the list we passed in
     // - check that table does not have the latest value we added
+    @Test
     public void defensiveCopyOnAddRow(){
         AsciiTable table = AsciiTable.newDefault();
         List<String> mutableRow = new ArrayList<String>(Arrays.asList("1st"));
@@ -68,14 +72,6 @@ public class AsciiTableTest {
         mutableRow.add("2cnd");
         assertThat(table.getRows().size(), is(3));
         assertThat(table.getRows().get(1), is("|1st|"));
-    }
-
-    // just to make it compile before we get real test dependencies
-    private void assertThat(Object o1, Object o2){
-        throw new RuntimeException("just emulating for compilation yet");
-    }
-    private Object is(Object o){
-        return o;
     }
 
 }
