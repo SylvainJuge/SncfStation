@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Arrays;
 
 import org.testng.annotations.Test;
+
 import sylvain.juge.sncfstation.AsciiTable;
 
 public class AsciiTableTest {

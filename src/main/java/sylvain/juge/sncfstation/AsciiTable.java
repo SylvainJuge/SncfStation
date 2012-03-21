@@ -37,7 +37,7 @@ public class AsciiTable {
         // lists are mutable by nature
         List<String> newRow = new ArrayList<String>(row);
         rows.add(newRow);
-        while( columnWidths.size() < newRow.size()){
+        while( columnWidths.size() < newRow.size() ){
             columnWidths.add(0);
         }
         for(int i=0;i<newRow.size();i++){
