@@ -25,7 +25,7 @@ public class AsciiTableTest {
     @Test
     public void emptyTableWithSeparatorRow(){
         AsciiTable table = AsciiTable.newDefault();
-        table.addSeparatorRow();
+        table.addSeparator();
         checkLayout( table, 2, 3 );
         assertThat( table.getRows(), is(Arrays.asList("oo","oo","oo")));
     }
@@ -44,6 +44,25 @@ public class AsciiTableTest {
         table.addRow("1","2");
         checkLayout(table, 5, 3 );
         assertThat( table.getRows(), is(Arrays.asList("o-o-o","|1|2|","o-o-o")) );
+    }
+
+    @Test
+    public void twoByTwoTable(){
+        AsciiTable table = AsciiTable.newDefault();
+        table.addRow("1","2");
+        table.addRow("3","4");
+        checkLayout(table, 5, 4 );
+        assertThat( table.getRows(), is(Arrays.asList("o-o-o","|1|2|","|3|4|","o-o-o")) );
+    }
+
+    @Test
+    public void twoByTwoTableWithSeparator(){
+        AsciiTable table = AsciiTable.newDefault();
+        table.addRow("1","2");
+        table.addSeparator();
+        table.addRow("3","4");
+        checkLayout(table, 5, 5 );
+        assertThat( table.getRows(), is(Arrays.asList("o-o-o","|1|2|","o-o-o","|3|4|","o-o-o")) );
     }
 
     /**
