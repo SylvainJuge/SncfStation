@@ -33,9 +33,17 @@ public class AsciiTableTest {
     @Test
     public void singleEntryTable(){
         AsciiTable table = AsciiTable.newDefault();
-        table.addRow(Arrays.asList("test"));
+        table.addRow("test");
         checkLayout( table, 6, 3 );
         assertThat( table.getRows(), is(Arrays.asList("o----o","|test|","o----o")) );
+    }
+
+    @Test
+    public void twoColumnTable(){
+        AsciiTable table = AsciiTable.newDefault();
+        table.addRow("1","2");
+        checkLayout(table, 5, 3 );
+        assertThat( table.getRows(), is(Arrays.asList("o-o-o","|1|2|","o-o-o")) );
     }
 
     /**

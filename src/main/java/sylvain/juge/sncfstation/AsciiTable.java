@@ -2,6 +2,7 @@ package sylvain.juge.sncfstation;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class AsciiTable {
 
@@ -47,7 +48,6 @@ public class AsciiTable {
         rows.add(SEPARATOR);
     }
 
-    // TODO : add varargs to improve API
     /** 
      * Adds a data row to table
      * @param row : row to add
@@ -66,6 +66,13 @@ public class AsciiTable {
                 columnWidths.set(i,length);
             }
         }
+   }
+    /** 
+     * Adds a data row to table
+     * @param data : row values
+     */
+   public void addRow(String... data){
+       addRow(Arrays.asList(data));
    }
 
    /** @return table total width */
@@ -140,8 +147,8 @@ public class AsciiTable {
                 for(int i=0;i<colWidth;++i){
                     sb.append(rowSeparator);
                 }
+                sb.append(corner);
             }
-            sb.append(corner);
         }
         return sb.toString();
     }

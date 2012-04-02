@@ -61,7 +61,7 @@ public class Main {
         TrainRecordParser parser = new TrainRecordParser();
         AsciiTable table = AsciiTable.newDefault();
         for(TrainRecord record:parser.parse(xml)){
-            table.addRow(Arrays.asList(record.getNumber(),record.getCity()));
+            table.addRow(record.getNumber(),record.getCity());
         }
         for(String row:table.getRows()){
             System.out.println(row);
