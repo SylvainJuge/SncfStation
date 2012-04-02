@@ -44,7 +44,7 @@ public class AsciiTable {
     /** 
      * Adds a separator row to table 
      */
-    public void addSeparatorRow(){
+    public void addSeparator(){
         rows.add(SEPARATOR);
     }
 
