@@ -60,6 +60,8 @@ public class Main {
         }
         TrainRecordParser parser = new TrainRecordParser();
         AsciiTable table = AsciiTable.newDefault();
+        table.addRow("Number", "Destination");
+        table.addSeparator();
         for(TrainRecord record:parser.parse(xml)){
             table.addRow(record.getNumber(),record.getCity());
         }
