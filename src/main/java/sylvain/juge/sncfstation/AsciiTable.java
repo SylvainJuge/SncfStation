@@ -30,7 +30,9 @@ public class AsciiTable {
     // TODO : separator rows must be implemented using a reference to a static 
     // value in order to avoid re-formatting them when a column is resized
     public void addSeparatorRow(){
+        rows.add(SEPARATOR);
     }
+    private final static List<String> SEPARATOR = new ArrayList<String>();
 
     public void addRow(List<String> row){
         // we have to copy values when thy are added because
@@ -49,18 +51,75 @@ public class AsciiTable {
    }
 
     public int getWidth(){
-        return 0;
+        // columns count -1 + 2 separators
+        // + sum of all columns widths
+        int width = columnWidths.size()+1;
+        if( width < 2 ){
+            width = 2;
+        }
+        for(int columnWidth:columnWidths){
+            width+=columnWidth;
+        }
+        return width;
     }
 
     public int getHeight(){
-        return 0;
+        return 2 + rows.size();
     }
 
     public List<String> getRows(){
-        // TODO : make a safe copy before returning values
+        List<String> result = new ArrayList<String>();
+        result.add(separatorRow());
         for(List<String> row:rows){
+            result.add( row == SEPARATOR ? separatorRow() : dataRow( row ) );
         }
-        return null;
+        result.add(separatorRow());
+        return result;
+    }
+
+    /** 
+     * renders a data row to ascii
+     * @param row : row to render
+     * @return formatted data row properly padded to fit current column widths
+     */
+    private String dataRow(List<String> row){
+        StringBuilder sb = new StringBuilder();
+        sb.append(columnSeparator);
+        if( row.isEmpty() ){
+            sb.append(columnSeparator);
+        } else {
+            for(int i=0;i<row.size();i++){
+                String cellValue = row.get(i);
+                int cellLength = cellValue.length();
+                sb.append(cellValue);
+                while( cellLength < columnWidths.get(i) ){
+                    sb.append(" ");
+                    ++cellLength;
+                }
+                sb.append(columnSeparator);
+            }
+        }
+        return sb.toString();
+    }
+
+    /** 
+     * renders a separtor row to ascii
+     * @return formatted separator row fitting current column widths
+     * */
+    private String separatorRow(){
+        StringBuilder sb = new StringBuilder();
+        sb.append(corner);
+        if( columnWidths.isEmpty() ){
+            sb.append(corner);
+        } else {
+            for(Integer colWidth:columnWidths){
+                for(int i=0;i<colWidth;++i){
+                    sb.append(rowSeparator);
+                }
+            }
+            sb.append(corner);
+        }
+        return sb.toString();
     }
 
     @Override
