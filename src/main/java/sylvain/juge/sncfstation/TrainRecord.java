@@ -13,12 +13,13 @@ public class TrainRecord {
         this.time = notNull(time);
         this.platform = platform;
     }
+    // TODO : translation of "provenance" 
     /** @return train where the trains comes from or goes to, depending on direction */
     public String getCity(){ 
         return city;
     }
     /** @return train number, never null */
-    public String getnumber(){ 
+    public String getNumber(){ 
         return number;
     }
     /** @return train platform if known, null otherwise */

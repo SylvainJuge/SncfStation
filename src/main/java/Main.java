@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 
 import java.util.List;
+import java.util.Arrays;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -17,6 +18,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 
 import sylvain.juge.sncfstation.TrainRecord;
 import sylvain.juge.sncfstation.TrainRecordParser;
+import sylvain.juge.sncfstation.AsciiTable;
 
 public class Main {
 
@@ -57,9 +59,12 @@ public class Main {
             xml = fetcher.downloadDepartureBoard();
         }
         TrainRecordParser parser = new TrainRecordParser();
-        List<TrainRecord> result = parser.parse(xml);
-        for(TrainRecord record:result){
-            System.out.println(record);
+        AsciiTable table = AsciiTable.newDefault();
+        for(TrainRecord record:parser.parse(xml)){
+            table.addRow(Arrays.asList(record.getNumber(),record.getCity()));
+        }
+        for(String row:table.getRows()){
+            System.out.println(row);
         }
     }
 

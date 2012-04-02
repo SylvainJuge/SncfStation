@@ -47,6 +47,7 @@ public class AsciiTable {
         rows.add(SEPARATOR);
     }
 
+    // TODO : add varargs to improve API
     /** 
      * Adds a data row to table
      * @param row : row to add
